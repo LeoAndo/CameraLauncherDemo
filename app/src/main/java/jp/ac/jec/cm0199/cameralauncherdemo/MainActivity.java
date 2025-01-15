@@ -4,7 +4,7 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.provider.MediaStore;
-import android.widget.Button;
+import android.util.Log;
 import android.widget.ImageView;
 
 import androidx.activity.EdgeToEdge;
@@ -16,7 +16,6 @@ import androidx.core.view.WindowInsetsCompat;
 
 public class MainActivity extends AppCompatActivity {
     private static final int REQUEST_IMAGE_CAPTURE = 1;
-    private ImageView imageView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -29,25 +28,36 @@ public class MainActivity extends AppCompatActivity {
             return insets;
         });
 
-        imageView = findViewById(R.id.imageView);
-
-        // カメラ起動ボタンのクリックイベントなど
-        Button button = findViewById(R.id.button);
-        button.setOnClickListener(v -> dispatchTakePictureIntent());
-    }
-
-    private void dispatchTakePictureIntent() {
-        Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-        startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
+        // ボタンをクリックした時の処理
+        findViewById(R.id.button).setOnClickListener(v -> {
+            // カメラアプリを起動する - START
+            Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+            try {
+                startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
+            } catch (Exception e) {
+                Log.e("MainActivity", "error: ", e);
+            }
+            // カメラアプリを起動する - END
+        });
     }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK) {
+        Log.d("MainActivity", "onActivityResult: requestCode: " + requestCode + " resultCode: " + resultCode + " data: " + data);
+        if (data == null) {
+            return;
+        }
+
+        if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK) { // カメラアプリから戻ってきたとき
+            // 撮影した画像をImageViewに表示する - START
             Bundle extras = data.getExtras();
-            Bitmap imageBitmap = (Bitmap) extras.get("data");
-            imageView.setImageBitmap(imageBitmap);
+            if (extras != null) {
+                Bitmap imageBitmap = (Bitmap) extras.get("data");
+                ImageView imageView = findViewById(R.id.imageView);
+                imageView.setImageBitmap(imageBitmap);
+            }
+            // 撮影した画像をImageViewに表示する - END
         }
     }
 }
